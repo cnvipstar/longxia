@@ -27,9 +27,34 @@ import { GATEWAY_CLIENT_MODES, GATEWAY_CLIENT_NAMES } from "../utils/message-cha
 import { VERSION } from "../version.js";
 import type { NodeManagerChoice, OnboardMode, ResetScope } from "./onboard-types.js";
 
+type OnboardingLocale = "zh-CN" | "en-US";
+
+function resolveOnboardingLocale(): OnboardingLocale {
+  const raw = (
+    process.env.OPENCLAW_LOCALE ??
+    process.env.LC_ALL ??
+    process.env.LC_MESSAGES ??
+    process.env.LANG ??
+    ""
+  )
+    .trim()
+    .toLowerCase();
+  if (raw.startsWith("en")) {
+    return "en-US";
+  }
+  return "zh-CN";
+}
+
+const ONBOARDING_LOCALE = resolveOnboardingLocale();
+
+function tr(text: { zh: string; en: string }): string {
+  return ONBOARDING_LOCALE === "zh-CN" ? text.zh : text.en;
+}
+
 export function guardCancel<T>(value: T | symbol, runtime: RuntimeEnv): T {
   if (isCancel(value)) {
-    cancel(stylePromptTitle("Setup cancelled.") ?? "Setup cancelled.");
+    const message = tr({ zh: "初始化已取消。", en: "Setup cancelled." });
+    cancel(stylePromptTitle(message) ?? message);
     runtime.exit(0);
     throw new Error("unreachable");
   }
@@ -63,7 +88,9 @@ export function summarizeExistingConfig(config: OpenClawConfig): string {
   if (config.skills?.install?.nodeManager) {
     rows.push(shortenHomeInString(`skills.nodeManager: ${config.skills.install.nodeManager}`));
   }
-  return rows.length ? rows.join("\n") : "No key settings detected.";
+  return rows.length
+    ? rows.join("\n")
+    : tr({ zh: "未检测到关键配置项。", en: "No key settings detected." });
 }
 
 export function randomToken(): string {
@@ -85,14 +112,17 @@ export function normalizeGatewayTokenInput(value: unknown): string {
 
 export function validateGatewayPasswordInput(value: unknown): string | undefined {
   if (typeof value !== "string") {
-    return "Required";
+    return tr({ zh: "必填", en: "Required" });
   }
   const trimmed = value.trim();
   if (!trimmed) {
-    return "Required";
+    return tr({ zh: "必填", en: "Required" });
   }
   if (trimmed === "undefined" || trimmed === "null") {
-    return 'Cannot be the literal string "undefined" or "null"';
+    return tr({
+      zh: '不能使用字面量字符串 "undefined" 或 "null"',
+      en: 'Cannot be the literal string "undefined" or "null"',
+    });
   }
   return undefined;
 }
@@ -214,12 +244,15 @@ export function formatControlUiSshHint(params: {
     : undefined;
   const sshTarget = resolveSshTargetHint();
   return [
-    "No GUI detected. Open from your computer:",
+    tr({
+      zh: "未检测到图形界面。请在你的电脑上执行：",
+      en: "No GUI detected. Open from your computer:",
+    }),
     `ssh -N -L ${params.port}:127.0.0.1:${params.port} ${sshTarget}`,
-    "Then open:",
+    tr({ zh: "然后打开：", en: "Then open:" }),
     localUrl,
     authedUrl,
-    "Docs:",
+    tr({ zh: "文档：", en: "Docs:" }),
     "https://docs.openclaw.ai/gateway/remote",
     "https://docs.openclaw.ai/web/control-ui",
   ]
@@ -294,10 +327,20 @@ export async function ensureWorkspaceAndSessions(
     dir: workspaceDir,
     ensureBootstrapFiles: !options?.skipBootstrap,
   });
-  runtime.log(`Workspace OK: ${shortenHomePath(ws.dir)}`);
+  runtime.log(
+    tr({
+      zh: `工作区就绪：${shortenHomePath(ws.dir)}`,
+      en: `Workspace OK: ${shortenHomePath(ws.dir)}`,
+    }),
+  );
   const sessionsDir = resolveSessionTranscriptsDirForAgent(options?.agentId);
   await fs.mkdir(sessionsDir, { recursive: true });
-  runtime.log(`Sessions OK: ${shortenHomePath(sessionsDir)}`);
+  runtime.log(
+    tr({
+      zh: `会话目录就绪：${shortenHomePath(sessionsDir)}`,
+      en: `Sessions OK: ${shortenHomePath(sessionsDir)}`,
+    }),
+  );
 }
 
 export function resolveNodeManagerOptions(): Array<{
@@ -322,9 +365,19 @@ export async function moveToTrash(pathname: string, runtime: RuntimeEnv): Promis
   }
   try {
     await runCommandWithTimeout(["trash", pathname], { timeoutMs: 5000 });
-    runtime.log(`Moved to Trash: ${shortenHomePath(pathname)}`);
+    runtime.log(
+      tr({
+        zh: `已移至废纸篓：${shortenHomePath(pathname)}`,
+        en: `Moved to Trash: ${shortenHomePath(pathname)}`,
+      }),
+    );
   } catch {
-    runtime.log(`Failed to move to Trash (manual delete): ${shortenHomePath(pathname)}`);
+    runtime.log(
+      tr({
+        zh: `移至废纸篓失败（请手动删除）：${shortenHomePath(pathname)}`,
+        en: `Failed to move to Trash (manual delete): ${shortenHomePath(pathname)}`,
+      }),
+    );
   }
 }
 
