@@ -1,25 +1,37 @@
-# 阶段一 PR 说明（中文默认 + 多语言插件化 + Windows 增强）
+# PR 标题建议
 
-## 目标
+`feat: zh-default multilingual onboarding, plugin language packs, and windows install flow`
 
-- 默认中文交互（`zh-CN`）。
-- 保持插件化扩展，尽量不改核心逻辑。
-- 为后续多语言扩展提供 `lang-core + lang-pack` 结构。
-- 提供一键安装脚本与 Windows 原生诊断/修复入口。
+## PR 摘要（可直接粘贴）
 
-## 主要变更
+本 PR 在尽量不改核心架构的前提下，完成了本 Fork 的阶段一目标：
 
-- 新增语言核心插件：
+- 默认中文（`zh-CN`）的 onboarding 与关键交互提示。
+- 插件化多语言能力（`lang-core + lang-pack`），支持按语言包扩展。
+- 一键安装脚本（macOS/Linux + Windows）与 Windows 原生增强检查。
+- 测试层改造成中英文案兼容，降低后续 CI 因文案切换导致的脆弱性。
+
+## 变更范围
+
+### 1) 语言插件（插件式 i18n）
+
+- 新增：
   - `extensions/lang-core/openclaw.plugin.json`
   - `extensions/lang-core/index.ts`
-- 新增语言包插件：
-  - `extensions/lang-zh-cn/*`
-  - `extensions/lang-en-us/*`
-  - `extensions/lang-ja-jp/*`
-- onboarding 默认自动启用语言插件栈：
-  - `src/commands/onboard-config.ts`
-  - `src/commands/onboard-config.test.ts`
-- onboarding 中文默认文案补齐：
+  - `extensions/lang-zh-cn/openclaw.plugin.json`
+  - `extensions/lang-zh-cn/index.ts`
+  - `extensions/lang-en-us/openclaw.plugin.json`
+  - `extensions/lang-en-us/index.ts`
+  - `extensions/lang-ja-jp/openclaw.plugin.json`
+  - `extensions/lang-ja-jp/index.ts`
+- 能力：
+  - `/langs`、`/lang`、`/lang set <locale>`、`/lang reset`
+  - 默认语言回退：`zh-CN`
+  - 可配置：`defaultLocale/currentLocale/allowedLocales`
+
+### 2) onboarding 中文默认（保留英文回退）
+
+- 主要覆盖文件：
   - `src/commands/onboard-channels.ts`
   - `src/commands/onboard-skills.ts`
   - `src/commands/onboard-custom.ts`
@@ -29,51 +41,61 @@
   - `src/wizard/onboarding.ts`
   - `src/wizard/onboarding.gateway-config.ts`
   - `src/wizard/onboarding.finalize.ts`
-- 一键安装与运维脚本：
+- 逻辑：
+  - 默认中文
+  - 当 `OPENCLAW_LOCALE/LC_*/LANG` 以 `en` 开头时切换英文
+
+### 3) onboarding 默认启用语言栈
+
+- 修改：
+  - `src/commands/onboard-config.ts`
+- 新增测试：
+  - `src/commands/onboard-config.test.ts`
+
+### 4) 一键安装与 Windows 原生增强
+
+- 新增：
   - `install-cn.sh`
   - `install-cn.ps1`
   - `windows-native-check.ps1`
   - `sync-upstream.sh`
-- 文档：
-  - `LANGUAGE_PLUGINS.md`
-  - `WINDOWS_NATIVE.md`
+- Windows 支持：
+  - `install-cn.ps1 -Mode Auto|WSL|Native`
+  - `windows-native-check.ps1 -Fix [-EnsureFirewallForLan]`
 
-## 行为说明
+### 5) 文档
 
-- 语言选择优先级：
-  - `plugins.entries["lang-core"].config.currentLocale`
-  - `defaultLocale`
-  - 回退 `zh-CN`
-- 默认允许语言：
-  - `["zh-CN", "en-US", "ja-JP"]`
-- 命令：
-  - `/langs`
-  - `/lang`
-  - `/lang set <locale>`
-  - `/lang reset`
+- 新增/更新：
+  - `README.md`（Fork quick start 区块）
+  - `LANGUAGE_PLUGINS.md`（中英双语）
+  - `WINDOWS_NATIVE.md`（中英双语）
 
-## Windows 说明
+### 6) 测试稳定性增强（中英文案兼容）
 
-- PowerShell 一键安装支持：
-  - `-Mode Auto|Native|WSL`（默认 `Auto`）
-  - `Auto` 优先 WSL，否则 Native
-- 原生检查脚本支持：
-  - 依赖检测
-  - 网关服务/健康检查
-  - 可选自动修复 `-Fix`
-  - LAN 场景防火墙规则 `-EnsureFirewallForLan`
+- 修改：
+  - `src/commands/onboard-channels.e2e.test.ts`
+  - `src/commands/onboard-hooks.e2e.test.ts`
+  - `src/commands/onboard-skills.e2e.test.ts`
 
-## 验证
+## 验证记录
 
-- 通过：
-  - `pnpm exec tsc -p tsconfig.json --noEmit`
-  - `pnpm exec oxlint ...`
-  - `pnpm vitest run src/commands/onboard-config.test.ts`
-  - `pnpm vitest run src/wizard/onboarding.test.ts`
-  - `pnpm vitest run src/wizard/onboarding.gateway-config.test.ts`
+已执行并通过：
 
-## 后续建议（阶段二）
+- `pnpm exec tsc -p tsconfig.json --noEmit`
+- `pnpm exec oxlint ...`
+- `pnpm vitest run src/commands/onboard-config.test.ts`
+- `pnpm vitest run src/wizard/onboarding.test.ts`
+- `pnpm vitest run src/wizard/onboarding.gateway-config.test.ts`
+- `pnpm vitest run --config vitest.e2e.config.ts src/commands/onboard-hooks.e2e.test.ts src/commands/onboard-skills.e2e.test.ts src/commands/onboard-channels.e2e.test.ts`
 
-- 增加更多语言包（插件形式，不改核心）。
-- 完善 Windows 原生运行文档（服务化/开机启动/防火墙策略）。
-- 增加脚本化集成测试（安装脚本 smoke test，Windows CI job）。
+## 兼容性与风险
+
+- 对核心运行逻辑改动较少，优先通过插件与 onboarding 文案层扩展。
+- 新增文案默认中文，可能影响依赖英文字符串的外部自动化脚本；测试已在仓内改为中英兼容。
+- Windows PowerShell 脚本在当前 macOS 开发环境无法做原生运行验证，已提供参数与健康检查路径。
+
+## 后续计划（阶段二建议）
+
+- 增加更多语言包（继续插件化，不侵入核心）。
+- 增加 Windows CI job（原生路径 smoke test）。
+- 为 `install-cn.ps1/install-cn.sh` 增补自动化安装回归测试。
