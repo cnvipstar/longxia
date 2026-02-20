@@ -54,11 +54,11 @@ async function requireRiskAcknowledgement(params: {
       zh: [
         "安全警告，请先阅读。",
         "",
-        "OpenClaw 是业余项目，仍处于 Beta 阶段。",
+        "Longxia 是业余项目，仍处于 Beta 阶段。",
         "开启工具后，机器人可以读取文件并执行操作。",
         "恶意提示词可能诱导其执行不安全行为。",
         "",
-        "如果你不熟悉基础安全和访问控制，请不要直接运行 OpenClaw。",
+        "如果你不熟悉基础安全和访问控制，请不要直接运行 Longxia。",
         "建议先请有经验的人协助后，再启用工具或对外暴露。",
         "",
         "推荐最小安全基线：",
@@ -76,11 +76,11 @@ async function requireRiskAcknowledgement(params: {
       en: [
         "Security warning — please read.",
         "",
-        "OpenClaw is a hobby project and still in beta. Expect sharp edges.",
+        "Longxia is a hobby project and still in beta. Expect sharp edges.",
         "This bot can read files and run actions if tools are enabled.",
         "A bad prompt can trick it into doing unsafe things.",
         "",
-        "If you’re not comfortable with basic security and access control, don’t run OpenClaw.",
+        "If you’re not comfortable with basic security and access control, don’t run Longxia.",
         "Ask someone experienced to help before enabling tools or exposing it to the internet.",
         "",
         "Recommended baseline:",
@@ -119,7 +119,7 @@ export async function runOnboardingWizard(
   const locale = resolveOnboardingLocale();
   const onboardHelpers = await import("../commands/onboard-helpers.js");
   onboardHelpers.printWizardHeader(runtime);
-  await prompter.intro(tr(locale, { zh: "OpenClaw 初始配置", en: "OpenClaw onboarding" }));
+  await prompter.intro(tr(locale, { zh: "Longxia 初始配置", en: "Longxia onboarding" }));
   await requireRiskAcknowledgement({ opts, prompter, locale });
 
   const snapshot = await readConfigFileSnapshot();
