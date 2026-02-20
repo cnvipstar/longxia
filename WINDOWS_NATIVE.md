@@ -5,6 +5,8 @@
 本 Fork 仍然将 **WSL2 作为优先推荐路径**（兼容性和稳定性更好），
 同时补充了 Windows 原生运行的检查/修复流程，便于直接在 Windows 上运行。
 
+CLI 默认命令为 `longxia`，同时保留 `openclaw` 兼容别名。
+
 ### 为什么
 
 上游当前主要推荐 Windows 走 WSL2，以保持工具链一致性和运行稳定性。
@@ -32,16 +34,16 @@
 检查项：
 
 - Node 版本 >= `22.12.0`
-- `openclaw` 命令可用性
+- `longxia` 命令可用性
 - Gateway 服务加载状态（`schtasks`）
 - Gateway 运行状态
 - Gateway RPC 探活
 
 `-Fix` 会执行：
 
-- `openclaw gateway install --runtime node --force`
-- `openclaw gateway start`
-- 然后使用 `openclaw gateway status --json` 复检
+- `longxia gateway install --runtime node --force`
+- `longxia gateway start`
+- 然后使用 `longxia gateway status --json` 复检
 
 ### 一键安装脚本集成
 
@@ -74,6 +76,8 @@
 This fork keeps **WSL2 as the recommended path** for production stability, but
 adds a native Windows hardening/check flow for users who run directly on Windows.
 
+The default CLI command is `longxia`, with `openclaw` still available as a compatibility alias.
+
 ### Why
 
 Upstream currently recommends Windows via WSL2 for toolchain consistency and
@@ -102,16 +106,16 @@ Auto-fix + firewall rule when `gateway.bind=lan`:
 What it checks:
 
 - Node version >= `22.12.0`
-- `openclaw` command availability
+- `longxia` command availability
 - Gateway service loaded state (`schtasks`)
 - Gateway runtime state
 - Gateway RPC probe success
 
 What `-Fix` does:
 
-- `openclaw gateway install --runtime node --force`
-- `openclaw gateway start`
-- then re-checks health via `openclaw gateway status --json`
+- `longxia gateway install --runtime node --force`
+- `longxia gateway start`
+- then re-checks health via `longxia gateway status --json`
 
 ### One-click installer integration
 

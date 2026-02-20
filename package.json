@@ -1,19 +1,20 @@
 {
-  "name": "openclaw",
+  "name": "longxia",
   "version": "2026.2.18",
   "description": "Multi-channel AI gateway with extensible messaging integrations",
   "keywords": [],
-  "homepage": "https://github.com/openclaw/openclaw#readme",
+  "homepage": "https://github.com/cnvipstar/longxia#readme",
   "bugs": {
-    "url": "https://github.com/openclaw/openclaw/issues"
+    "url": "https://github.com/cnvipstar/longxia/issues"
   },
   "license": "MIT",
   "author": "",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/openclaw/openclaw.git"
+    "url": "git+https://github.com/cnvipstar/longxia.git"
   },
   "bin": {
+    "longxia": "longxia.mjs",
     "openclaw": "openclaw.mjs"
   },
   "directories": {
@@ -23,6 +24,7 @@
   "files": [
     "CHANGELOG.md",
     "LICENSE",
+    "longxia.mjs",
     "openclaw.mjs",
     "README-header.png",
     "README.md",
@@ -44,7 +46,7 @@
       "types": "./dist/plugin-sdk/account-id.d.ts",
       "default": "./dist/plugin-sdk/account-id.js"
     },
-    "./cli-entry": "./openclaw.mjs"
+    "./cli-entry": "./longxia.mjs"
   },
   "scripts": {
     "android:assemble": "cd apps/android && ./gradlew :app:assembleDebug",
@@ -83,6 +85,8 @@
     "lint:docs:fix": "pnpm dlx markdownlint-cli2 --fix",
     "lint:fix": "oxlint --type-aware --fix && pnpm format",
     "lint:swift": "swiftlint lint --config .swiftlint.yml && (cd apps/ios && swiftlint lint --config .swiftlint.yml)",
+    "longxia": "node scripts/run-node.mjs",
+    "longxia:rpc": "node scripts/run-node.mjs agent --mode rpc --json",
     "mac:open": "open dist/OpenClaw.app",
     "mac:package": "bash scripts/package-mac-app.sh",
     "mac:restart": "bash scripts/restart-mac.sh",

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_URL="${LONGXIA_REPO_URL:-https://github.com/cnvipstar/longxia.git}"
-INSTALL_DIR="${LONGXIA_INSTALL_DIR:-$HOME/.openclaw-longxia}"
+INSTALL_DIR="${LONGXIA_INSTALL_DIR:-$HOME/.longxia}"
 BRANCH="${LONGXIA_BRANCH:-main}"
 ONBOARD_FLOW="${LONGXIA_ONBOARD_FLOW:-quickstart}"
 RUN_ONBOARD=1
@@ -16,7 +16,7 @@ Usage:
 
 Options:
   --repo <url>         Git repo URL (default: https://github.com/cnvipstar/longxia.git)
-  --dir <path>         Install/update directory (default: ~/.openclaw-longxia)
+  --dir <path>         Install/update directory (default: ~/.longxia)
   --branch <name>      Git branch (default: main)
   --flow <name>        Onboarding flow (default: quickstart)
   --no-onboard         Skip onboarding wizard
@@ -103,17 +103,17 @@ echo "Linking CLI globally..."
 pnpm link --global
 
 echo "Applying language defaults..."
-openclaw config set 'plugins.entries[lang-core].enabled' 'true' --json
-openclaw config set 'plugins.entries[lang-core].config.defaultLocale' '"zh-CN"' --json
-openclaw config set 'plugins.entries[lang-core].config.currentLocale' '"zh-CN"' --json
-openclaw config set 'plugins.entries[lang-core].config.allowedLocales' '["zh-CN","en-US","ja-JP"]' --json
-openclaw config set 'plugins.entries[lang-zh-cn].enabled' 'true' --json
-openclaw config set 'plugins.entries[lang-en-us].enabled' 'true' --json
-openclaw config set 'plugins.entries[lang-ja-jp].enabled' 'true' --json
+longxia config set 'plugins.entries[lang-core].enabled' 'true' --json
+longxia config set 'plugins.entries[lang-core].config.defaultLocale' '"zh-CN"' --json
+longxia config set 'plugins.entries[lang-core].config.currentLocale' '"zh-CN"' --json
+longxia config set 'plugins.entries[lang-core].config.allowedLocales' '["zh-CN","en-US","ja-JP"]' --json
+longxia config set 'plugins.entries[lang-zh-cn].enabled' 'true' --json
+longxia config set 'plugins.entries[lang-en-us].enabled' 'true' --json
+longxia config set 'plugins.entries[lang-ja-jp].enabled' 'true' --json
 
 if [[ "$RUN_ONBOARD" -eq 1 ]]; then
   echo "Starting onboarding wizard..."
-  openclaw onboard --flow "$ONBOARD_FLOW" --install-daemon
+  longxia onboard --flow "$ONBOARD_FLOW" --install-daemon
 else
   echo "Onboarding skipped (--no-onboard)."
 fi

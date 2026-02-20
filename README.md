@@ -25,7 +25,7 @@
 - 提供更友好的一键安装流程（macOS/Linux/Windows）。
 - 强化 Windows 原生运行检查与修复路径。
 
-> 品牌说明：本项目对外品牌为 **Longxia**。为保持兼容，当前 CLI 命令名仍为 `openclaw`。
+> 品牌说明：本项目对外品牌为 **Longxia**。CLI 默认命令为 `longxia`，同时保留 `openclaw` 兼容别名。
 
 ## 我们做了什么（与上游差异）
 
@@ -104,7 +104,7 @@ pnpm install
 pnpm ui:build
 pnpm build
 pnpm link --global
-openclaw onboard --install-daemon
+longxia onboard --install-daemon
 ```
 
 ## 与上游同步（Fork 维护）

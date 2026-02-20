@@ -40,7 +40,7 @@ pnpm install
 pnpm ui:build
 pnpm build
 pnpm link --global
-openclaw onboard --install-daemon
+longxia onboard --install-daemon
 ```
 
 ## Extra Docs
@@ -50,5 +50,5 @@ openclaw onboard --install-daemon
 
 ## Notes
 
-- Branding is Longxia, while CLI command names remain `openclaw` for compatibility.
+- Branding is Longxia. The default CLI command is `longxia`, and `openclaw` remains as a compatibility alias.
 - License remains MIT (see [LICENSE](LICENSE)).

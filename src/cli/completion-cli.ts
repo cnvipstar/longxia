@@ -37,7 +37,7 @@ export function resolveShellFromEnv(env: NodeJS.ProcessEnv = process.env): Compl
 function sanitizeCompletionBasename(value: string): string {
   const trimmed = value.trim();
   if (!trimmed) {
-    return "openclaw";
+    return "longxia";
   }
   return trimmed.replace(/[^a-zA-Z0-9._-]/g, "-");
 }
@@ -57,7 +57,7 @@ export function resolveCompletionCachePath(shell: CompletionShell, binName: stri
 /** Check if the completion cache file exists for the given shell. */
 export async function completionCacheExists(
   shell: CompletionShell,
-  binName = "openclaw",
+  binName = "longxia",
 ): Promise<boolean> {
   const cachePath = resolveCompletionCachePath(shell, binName);
   return pathExists(cachePath);
@@ -179,7 +179,7 @@ function getShellProfilePath(shell: CompletionShell): string {
 
 export async function isCompletionInstalled(
   shell: CompletionShell,
-  binName = "openclaw",
+  binName = "longxia",
 ): Promise<boolean> {
   const profilePath = getShellProfilePath(shell);
 
@@ -201,7 +201,7 @@ export async function isCompletionInstalled(
  */
 export async function usesSlowDynamicCompletion(
   shell: CompletionShell,
-  binName = "openclaw",
+  binName = "longxia",
 ): Promise<boolean> {
   const profilePath = getShellProfilePath(shell);
 
@@ -289,7 +289,7 @@ export function registerCompletionCli(program: Command) {
     });
 }
 
-export async function installCompletion(shell: string, yes: boolean, binName = "openclaw") {
+export async function installCompletion(shell: string, yes: boolean, binName = "longxia") {
   const home = process.env.HOME || os.homedir();
   let profilePath = "";
   let sourceLine = "";

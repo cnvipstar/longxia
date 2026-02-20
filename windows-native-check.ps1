@@ -51,9 +51,9 @@ function Resolve-OpenClawTaskName {
 
 function Invoke-OpenClawStatusJson {
   param([int]$TimeoutMs)
-  $json = & openclaw gateway status --json --timeout $TimeoutMs
+  $json = & longxia gateway status --json --timeout $TimeoutMs
   if (-not $json) {
-    throw "openclaw gateway status --json returned empty output."
+    throw "longxia gateway status --json returned empty output."
   }
   return ($json | ConvertFrom-Json -Depth 100)
 }
@@ -91,7 +91,7 @@ if (-not $IsWindows) {
 }
 
 Require-Command node
-Require-Command openclaw
+Require-Command longxia
 
 if (-not (Test-NodeVersion)) {
   Write-Fail "Node version is below 22.12.0. Please upgrade Node first."
@@ -104,8 +104,8 @@ $taskName = Resolve-OpenClawTaskName -Profile $profile
 
 if ($Fix) {
   Write-Check "Applying native service fix steps..."
-  & openclaw gateway install --runtime node --force
-  & openclaw gateway start
+  & longxia gateway install --runtime node --force
+  & longxia gateway start
 }
 
 $status = Invoke-OpenClawStatusJson -TimeoutMs $TimeoutMs
@@ -145,15 +145,15 @@ if ($ok) {
 Write-Fail "Native Windows gateway is not healthy."
 if (-not $loaded) {
   Write-Warn "Gateway service is not installed/loaded."
-  Write-Host "       Run: openclaw gateway install --runtime node --force"
+  Write-Host "       Run: longxia gateway install --runtime node --force"
 }
 if ($runtimeStatus -ne "running") {
   Write-Warn "Gateway runtime is not running."
-  Write-Host "       Run: openclaw gateway start"
+  Write-Host "       Run: longxia gateway start"
 }
 if (-not $rpcOk) {
   Write-Warn "Gateway RPC probe failed."
-  Write-Host "       Run: openclaw gateway status --json"
+  Write-Host "       Run: longxia gateway status --json"
 }
 if ($runtimeStatus -eq "running" -and $portStatus -and $portStatus -ne "busy") {
   Write-Warn "Gateway process is running but port is not listening."

@@ -9,6 +9,8 @@
 - `lang-en-us`
 - `lang-ja-jp`
 
+CLI 默认命令为 `longxia`，同时保留 `openclaw` 作为兼容别名。
+
 ### 推荐配置（`~/.openclaw/openclaw.json`）
 
 ```json5
@@ -44,7 +46,7 @@
 强制英文示例：
 
 ```bash
-OPENCLAW_LOCALE=en-US openclaw onboard
+OPENCLAW_LOCALE=en-US longxia onboard
 ```
 
 ## English notes
@@ -55,6 +57,8 @@ This fork adds a plugin-style language stack:
 - `lang-zh-cn`
 - `lang-en-us`
 - `lang-ja-jp`
+
+The default CLI command is `longxia`, with `openclaw` kept as a compatibility alias.
 
 ### Suggested config (`~/.openclaw/openclaw.json`)
 
@@ -91,5 +95,5 @@ This fork defaults onboarding UI to Chinese unless env locale starts with `en`.
 Force English:
 
 ```bash
-OPENCLAW_LOCALE=en-US openclaw onboard
+OPENCLAW_LOCALE=en-US longxia onboard
 ```

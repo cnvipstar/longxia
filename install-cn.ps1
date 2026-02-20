@@ -13,8 +13,8 @@ param(
 $ErrorActionPreference = "Stop"
 
 if (-not $RepoUrl) { $RepoUrl = "https://github.com/cnvipstar/longxia.git" }
-if (-not $InstallDir) { $InstallDir = Join-Path $HOME ".openclaw-longxia" }
-if (-not $WslInstallDir) { $WslInstallDir = "~/.openclaw-longxia" }
+if (-not $InstallDir) { $InstallDir = Join-Path $HOME ".longxia" }
+if (-not $WslInstallDir) { $WslInstallDir = "~/.longxia" }
 if (-not $Branch) { $Branch = "main" }
 if (-not $OnboardFlow) { $OnboardFlow = "quickstart" }
 
@@ -97,17 +97,17 @@ function Invoke-NativeInstaller {
   pnpm link --global
 
   Write-Host "Applying language defaults..."
-  openclaw config set 'plugins.entries[lang-core].enabled' 'true' --json
-  openclaw config set 'plugins.entries[lang-core].config.defaultLocale' '"zh-CN"' --json
-  openclaw config set 'plugins.entries[lang-core].config.currentLocale' '"zh-CN"' --json
-  openclaw config set 'plugins.entries[lang-core].config.allowedLocales' '["zh-CN","en-US","ja-JP"]' --json
-  openclaw config set 'plugins.entries[lang-zh-cn].enabled' 'true' --json
-  openclaw config set 'plugins.entries[lang-en-us].enabled' 'true' --json
-  openclaw config set 'plugins.entries[lang-ja-jp].enabled' 'true' --json
+  longxia config set 'plugins.entries[lang-core].enabled' 'true' --json
+  longxia config set 'plugins.entries[lang-core].config.defaultLocale' '"zh-CN"' --json
+  longxia config set 'plugins.entries[lang-core].config.currentLocale' '"zh-CN"' --json
+  longxia config set 'plugins.entries[lang-core].config.allowedLocales' '["zh-CN","en-US","ja-JP"]' --json
+  longxia config set 'plugins.entries[lang-zh-cn].enabled' 'true' --json
+  longxia config set 'plugins.entries[lang-en-us].enabled' 'true' --json
+  longxia config set 'plugins.entries[lang-ja-jp].enabled' 'true' --json
 
   if (-not $NoOnboard) {
     Write-Host "Starting onboarding wizard..."
-    openclaw onboard --flow $OnboardFlow --install-daemon
+    longxia onboard --flow $OnboardFlow --install-daemon
   } else {
     Write-Host "Onboarding skipped (-NoOnboard)."
   }
