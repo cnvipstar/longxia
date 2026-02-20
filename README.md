@@ -1,6 +1,10 @@
 # 🦞 Longxia — Personal AI Assistant
 
 <p align="center">
+  <img src="assets/brand/logo.jpg" alt="Longxia Logo" width="220">
+</p>
+
+<p align="center">
   <strong>EXFOLIATE! EXFOLIATE!</strong>
 </p>
 
@@ -127,8 +131,8 @@ Details: [Development channels](https://docs.openclaw.ai/install/development-cha
 Prefer `pnpm` for builds from source. Bun is optional for running TypeScript directly.
 
 ```bash
-git clone https://github.com/openclaw/openclaw.git
-cd openclaw
+git clone https://github.com/cnvipstar/longxia.git
+cd longxia
 
 pnpm install
 pnpm ui:build # auto-installs UI deps on first run
@@ -144,7 +148,7 @@ Note: `pnpm openclaw ...` runs TypeScript directly (via `tsx`). `pnpm build` pro
 
 ## Security defaults (DM access)
 
-OpenClaw connects to real messaging surfaces. Treat inbound DMs as **untrusted input**.
+Longxia connects to real messaging surfaces. Treat inbound DMs as **untrusted input**.
 
 Full security guide: [Security](https://docs.openclaw.ai/gateway/security)
 
@@ -245,7 +249,7 @@ WhatsApp / Telegram / Slack / Discord / Google Chat / Signal / iMessage / BlueBu
 
 ## Tailscale access (Gateway dashboard)
 
-OpenClaw can auto-configure Tailscale **Serve** (tailnet-only) or **Funnel** (public) while the Gateway stays bound to loopback. Configure `gateway.tailscale.mode`:
+Longxia can auto-configure Tailscale **Serve** (tailnet-only) or **Funnel** (public) while the Gateway stays bound to loopback. Configure `gateway.tailscale.mode`:
 
 - `off`: no Tailscale automation (default).
 - `serve`: tailnet-only HTTPS via `tailscale serve` (uses Tailscale identity headers by default).
@@ -253,7 +257,7 @@ OpenClaw can auto-configure Tailscale **Serve** (tailnet-only) or **Funnel** (pu
 
 Notes:
 
-- `gateway.bind` must stay `loopback` when Serve/Funnel is enabled (OpenClaw enforces this).
+- `gateway.bind` must stay `loopback` when Serve/Funnel is enabled (Longxia enforces this).
 - Serve can be forced to require a password by setting `gateway.auth.mode: "password"` or `gateway.auth.allowTailscale: false`.
 - Funnel refuses to start unless `gateway.auth.mode: "password"` is set.
 - Optional: `gateway.tailscale.resetOnExit` to undo Serve/Funnel on shutdown.
@@ -319,7 +323,7 @@ The Gateway alone delivers a great experience. All apps are optional and add ext
 
 If you plan to build/run companion apps, follow the platform runbooks below.
 
-### macOS (OpenClaw.app) (optional)
+### macOS (Longxia.app) (optional)
 
 - Menu bar control for the Gateway and health.
 - Voice Wake + push-to-talk overlay.
@@ -515,13 +519,13 @@ Use these when you’re past the onboarding flow and want the deeper reference.
 
 ## Molty
 
-OpenClaw was built for **Molty**, a space lobster AI assistant. 🦞
+Longxia was built for **Molty**, a space lobster AI assistant. 🦞
 by Peter Steinberger and the community.
 
-- [openclaw.ai](https://openclaw.ai)
+- [www.longxia.ren](https://www.longxia.ren)
 - [soul.md](https://soul.md)
 - [steipete.me](https://steipete.me)
-- [@openclaw](https://x.com/openclaw)
+- [www.longxia.ren](https://www.longxia.ren)
 
 ## Community
 
