@@ -173,7 +173,7 @@ Run `openclaw doctor` to surface risky/misconfigured DM policies.
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=openclaw/openclaw&type=date&legend=top-left)](https://www.star-history.com/#openclaw/openclaw&type=date&legend=top-left)
+[![Star History Chart](https://api.star-history.com/svg?repos=cnvipstar/longxia&type=date&legend=top-left)](https://www.star-history.com/#cnvipstar/longxia&type=date&legend=top-left)
 
 ## Everything we built so far
 
