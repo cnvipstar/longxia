@@ -1,0 +1,10 @@
+{
+  "id": "lang-ja-jp",
+  "name": "Language Pack ja-JP",
+  "description": "Japanese language style pack for lang-core.",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

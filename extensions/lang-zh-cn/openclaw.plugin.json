@@ -1,0 +1,10 @@
+{
+  "id": "lang-zh-cn",
+  "name": "Language Pack zh-CN",
+  "description": "Chinese (Simplified) language style pack for lang-core.",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

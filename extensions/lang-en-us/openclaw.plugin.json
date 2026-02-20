@@ -1,0 +1,10 @@
+{
+  "id": "lang-en-us",
+  "name": "Language Pack en-US",
+  "description": "English (US) language style pack for lang-core.",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

@@ -18,42 +18,92 @@ import { resolveUserPath } from "../utils.js";
 import type { QuickstartGatewayDefaults, WizardFlow } from "./onboarding.types.js";
 import { WizardCancelledError, type WizardPrompter } from "./prompts.js";
 
+type OnboardingLocale = "zh-CN" | "en-US";
+
+function resolveOnboardingLocale(): OnboardingLocale {
+  const raw = (
+    process.env.OPENCLAW_LOCALE ??
+    process.env.LC_ALL ??
+    process.env.LC_MESSAGES ??
+    process.env.LANG ??
+    ""
+  )
+    .trim()
+    .toLowerCase();
+  if (raw.startsWith("en")) {
+    return "en-US";
+  }
+  return "zh-CN";
+}
+
+function tr(locale: OnboardingLocale, text: { zh: string; en: string }): string {
+  return locale === "zh-CN" ? text.zh : text.en;
+}
+
 async function requireRiskAcknowledgement(params: {
   opts: OnboardOptions;
   prompter: WizardPrompter;
+  locale: OnboardingLocale;
 }) {
   if (params.opts.acceptRisk === true) {
     return;
   }
 
   await params.prompter.note(
-    [
-      "Security warning — please read.",
-      "",
-      "OpenClaw is a hobby project and still in beta. Expect sharp edges.",
-      "This bot can read files and run actions if tools are enabled.",
-      "A bad prompt can trick it into doing unsafe things.",
-      "",
-      "If you’re not comfortable with basic security and access control, don’t run OpenClaw.",
-      "Ask someone experienced to help before enabling tools or exposing it to the internet.",
-      "",
-      "Recommended baseline:",
-      "- Pairing/allowlists + mention gating.",
-      "- Sandbox + least-privilege tools.",
-      "- Keep secrets out of the agent’s reachable filesystem.",
-      "- Use the strongest available model for any bot with tools or untrusted inboxes.",
-      "",
-      "Run regularly:",
-      "openclaw security audit --deep",
-      "openclaw security audit --fix",
-      "",
-      "Must read: https://docs.openclaw.ai/gateway/security",
-    ].join("\n"),
-    "Security",
+    tr(params.locale, {
+      zh: [
+        "安全警告，请先阅读。",
+        "",
+        "OpenClaw 是业余项目，仍处于 Beta 阶段。",
+        "开启工具后，机器人可以读取文件并执行操作。",
+        "恶意提示词可能诱导其执行不安全行为。",
+        "",
+        "如果你不熟悉基础安全和访问控制，请不要直接运行 OpenClaw。",
+        "建议先请有经验的人协助后，再启用工具或对外暴露。",
+        "",
+        "推荐最小安全基线：",
+        "- 配对/白名单 + 提及门控。",
+        "- 沙箱 + 最小权限工具。",
+        "- 将密钥和敏感文件隔离到 Agent 不可达路径。",
+        "- 面向不可信输入时优先使用更强模型。",
+        "",
+        "请定期执行：",
+        "openclaw security audit --deep",
+        "openclaw security audit --fix",
+        "",
+        "必读文档：https://docs.openclaw.ai/gateway/security",
+      ].join("\n"),
+      en: [
+        "Security warning — please read.",
+        "",
+        "OpenClaw is a hobby project and still in beta. Expect sharp edges.",
+        "This bot can read files and run actions if tools are enabled.",
+        "A bad prompt can trick it into doing unsafe things.",
+        "",
+        "If you’re not comfortable with basic security and access control, don’t run OpenClaw.",
+        "Ask someone experienced to help before enabling tools or exposing it to the internet.",
+        "",
+        "Recommended baseline:",
+        "- Pairing/allowlists + mention gating.",
+        "- Sandbox + least-privilege tools.",
+        "- Keep secrets out of the agent’s reachable filesystem.",
+        "- Use the strongest available model for any bot with tools or untrusted inboxes.",
+        "",
+        "Run regularly:",
+        "openclaw security audit --deep",
+        "openclaw security audit --fix",
+        "",
+        "Must read: https://docs.openclaw.ai/gateway/security",
+      ].join("\n"),
+    }),
+    tr(params.locale, { zh: "安全", en: "Security" }),
   );
 
   const ok = await params.prompter.confirm({
-    message: "I understand this is powerful and inherently risky. Continue?",
+    message: tr(params.locale, {
+      zh: "我理解该系统能力强且天然有风险。是否继续？",
+      en: "I understand this is powerful and inherently risky. Continue?",
+    }),
     initialValue: false,
   });
   if (!ok) {
@@ -66,16 +116,20 @@ export async function runOnboardingWizard(
   runtime: RuntimeEnv = defaultRuntime,
   prompter: WizardPrompter,
 ) {
+  const locale = resolveOnboardingLocale();
   const onboardHelpers = await import("../commands/onboard-helpers.js");
   onboardHelpers.printWizardHeader(runtime);
-  await prompter.intro("OpenClaw onboarding");
-  await requireRiskAcknowledgement({ opts, prompter });
+  await prompter.intro(tr(locale, { zh: "OpenClaw 初始配置", en: "OpenClaw onboarding" }));
+  await requireRiskAcknowledgement({ opts, prompter, locale });
 
   const snapshot = await readConfigFileSnapshot();
   let baseConfig: OpenClawConfig = snapshot.valid ? snapshot.config : {};
 
   if (snapshot.exists && !snapshot.valid) {
-    await prompter.note(onboardHelpers.summarizeExistingConfig(baseConfig), "Invalid config");
+    await prompter.note(
+      onboardHelpers.summarizeExistingConfig(baseConfig),
+      tr(locale, { zh: "配置无效", en: "Invalid config" }),
+    );
     if (snapshot.issues.length > 0) {
       await prompter.note(
         [
@@ -83,18 +137,27 @@ export async function runOnboardingWizard(
           "",
           "Docs: https://docs.openclaw.ai/gateway/configuration",
         ].join("\n"),
-        "Config issues",
+        tr(locale, { zh: "配置问题", en: "Config issues" }),
       );
     }
     await prompter.outro(
-      `Config invalid. Run \`${formatCliCommand("openclaw doctor")}\` to repair it, then re-run onboarding.`,
+      tr(locale, {
+        zh: `配置无效。请先执行 \`${formatCliCommand("openclaw doctor")}\` 修复，再重新运行向导。`,
+        en: `Config invalid. Run \`${formatCliCommand("openclaw doctor")}\` to repair it, then re-run onboarding.`,
+      }),
     );
     runtime.exit(1);
     return;
   }
 
-  const quickstartHint = `Configure details later via ${formatCliCommand("openclaw configure")}.`;
-  const manualHint = "Configure port, network, Tailscale, and auth options.";
+  const quickstartHint = tr(locale, {
+    zh: `细节可稍后通过 ${formatCliCommand("openclaw configure")} 配置。`,
+    en: `Configure details later via ${formatCliCommand("openclaw configure")}.`,
+  });
+  const manualHint = tr(locale, {
+    zh: "手动配置端口、网络、Tailscale 与鉴权选项。",
+    en: "Configure port, network, Tailscale, and auth options.",
+  });
   const explicitFlowRaw = opts.flow?.trim();
   const normalizedExplicitFlow = explicitFlowRaw === "manual" ? "advanced" : explicitFlowRaw;
   if (
@@ -102,7 +165,12 @@ export async function runOnboardingWizard(
     normalizedExplicitFlow !== "quickstart" &&
     normalizedExplicitFlow !== "advanced"
   ) {
-    runtime.error("Invalid --flow (use quickstart, manual, or advanced).");
+    runtime.error(
+      tr(locale, {
+        zh: "无效 --flow（可选 quickstart、manual、advanced）。",
+        en: "Invalid --flow (use quickstart, manual, or advanced).",
+      }),
+    );
     runtime.exit(1);
     return;
   }
@@ -113,18 +181,25 @@ export async function runOnboardingWizard(
   let flow: WizardFlow =
     explicitFlow ??
     (await prompter.select({
-      message: "Onboarding mode",
+      message: tr(locale, { zh: "配置模式", en: "Onboarding mode" }),
       options: [
-        { value: "quickstart", label: "QuickStart", hint: quickstartHint },
-        { value: "advanced", label: "Manual", hint: manualHint },
+        {
+          value: "quickstart",
+          label: tr(locale, { zh: "快速开始", en: "QuickStart" }),
+          hint: quickstartHint,
+        },
+        { value: "advanced", label: tr(locale, { zh: "手动", en: "Manual" }), hint: manualHint },
       ],
       initialValue: "quickstart",
     }));
 
   if (opts.mode === "remote" && flow === "quickstart") {
     await prompter.note(
-      "QuickStart only supports local gateways. Switching to Manual mode.",
-      "QuickStart",
+      tr(locale, {
+        zh: "快速开始仅支持本地网关，将切换为手动模式。",
+        en: "QuickStart only supports local gateways. Switching to Manual mode.",
+      }),
+      tr(locale, { zh: "快速开始", en: "QuickStart" }),
     );
     flow = "advanced";
   }
@@ -132,15 +207,15 @@ export async function runOnboardingWizard(
   if (snapshot.exists) {
     await prompter.note(
       onboardHelpers.summarizeExistingConfig(baseConfig),
-      "Existing config detected",
+      tr(locale, { zh: "检测到现有配置", en: "Existing config detected" }),
     );
 
     const action = await prompter.select({
-      message: "Config handling",
+      message: tr(locale, { zh: "如何处理现有配置", en: "Config handling" }),
       options: [
-        { value: "keep", label: "Use existing values" },
-        { value: "modify", label: "Update values" },
-        { value: "reset", label: "Reset" },
+        { value: "keep", label: tr(locale, { zh: "保留现有值", en: "Use existing values" }) },
+        { value: "modify", label: tr(locale, { zh: "更新配置", en: "Update values" }) },
+        { value: "reset", label: tr(locale, { zh: "重置", en: "Reset" }) },
       ],
     });
 
@@ -148,16 +223,22 @@ export async function runOnboardingWizard(
       const workspaceDefault =
         baseConfig.agents?.defaults?.workspace ?? onboardHelpers.DEFAULT_WORKSPACE;
       const resetScope = (await prompter.select({
-        message: "Reset scope",
+        message: tr(locale, { zh: "重置范围", en: "Reset scope" }),
         options: [
-          { value: "config", label: "Config only" },
+          { value: "config", label: tr(locale, { zh: "仅配置", en: "Config only" }) },
           {
             value: "config+creds+sessions",
-            label: "Config + creds + sessions",
+            label: tr(locale, {
+              zh: "配置 + 凭据 + 会话",
+              en: "Config + creds + sessions",
+            }),
           },
           {
             value: "full",
-            label: "Full reset (config + creds + sessions + workspace)",
+            label: tr(locale, {
+              zh: "完全重置（配置 + 凭据 + 会话 + 工作区）",
+              en: "Full reset (config + creds + sessions + workspace)",
+            }),
           },
         ],
       })) as ResetScope;
@@ -220,54 +301,59 @@ export async function runOnboardingWizard(
   if (flow === "quickstart") {
     const formatBind = (value: "loopback" | "lan" | "auto" | "custom" | "tailnet") => {
       if (value === "loopback") {
-        return "Loopback (127.0.0.1)";
+        return tr(locale, { zh: "回环 (127.0.0.1)", en: "Loopback (127.0.0.1)" });
       }
       if (value === "lan") {
         return "LAN";
       }
       if (value === "custom") {
-        return "Custom IP";
+        return tr(locale, { zh: "自定义 IP", en: "Custom IP" });
       }
       if (value === "tailnet") {
-        return "Tailnet (Tailscale IP)";
+        return tr(locale, { zh: "Tailnet (Tailscale IP)", en: "Tailnet (Tailscale IP)" });
       }
-      return "Auto";
+      return tr(locale, { zh: "自动", en: "Auto" });
     };
     const formatAuth = (value: GatewayAuthChoice) => {
       if (value === "token") {
-        return "Token (default)";
+        return tr(locale, { zh: "Token（默认）", en: "Token (default)" });
       }
-      return "Password";
+      return tr(locale, { zh: "密码", en: "Password" });
     };
     const formatTailscale = (value: "off" | "serve" | "funnel") => {
       if (value === "off") {
-        return "Off";
+        return tr(locale, { zh: "关闭", en: "Off" });
       }
       if (value === "serve") {
-        return "Serve";
+        return tr(locale, { zh: "Serve", en: "Serve" });
       }
-      return "Funnel";
+      return tr(locale, { zh: "Funnel", en: "Funnel" });
     };
     const quickstartLines = quickstartGateway.hasExisting
       ? [
-          "Keeping your current gateway settings:",
-          `Gateway port: ${quickstartGateway.port}`,
-          `Gateway bind: ${formatBind(quickstartGateway.bind)}`,
+          tr(locale, { zh: "沿用当前网关设置：", en: "Keeping your current gateway settings:" }),
+          `${tr(locale, { zh: "网关端口", en: "Gateway port" })}: ${quickstartGateway.port}`,
+          `${tr(locale, { zh: "网关绑定", en: "Gateway bind" })}: ${formatBind(quickstartGateway.bind)}`,
           ...(quickstartGateway.bind === "custom" && quickstartGateway.customBindHost
-            ? [`Gateway custom IP: ${quickstartGateway.customBindHost}`]
+            ? [
+                `${tr(locale, { zh: "网关自定义 IP", en: "Gateway custom IP" })}: ${quickstartGateway.customBindHost}`,
+              ]
             : []),
-          `Gateway auth: ${formatAuth(quickstartGateway.authMode)}`,
-          `Tailscale exposure: ${formatTailscale(quickstartGateway.tailscaleMode)}`,
-          "Direct to chat channels.",
+          `${tr(locale, { zh: "网关鉴权", en: "Gateway auth" })}: ${formatAuth(quickstartGateway.authMode)}`,
+          `${tr(locale, { zh: "Tailscale 暴露", en: "Tailscale exposure" })}: ${formatTailscale(quickstartGateway.tailscaleMode)}`,
+          tr(locale, { zh: "下一步直接进入渠道配置。", en: "Direct to chat channels." }),
         ]
       : [
-          `Gateway port: ${DEFAULT_GATEWAY_PORT}`,
-          "Gateway bind: Loopback (127.0.0.1)",
-          "Gateway auth: Token (default)",
-          "Tailscale exposure: Off",
-          "Direct to chat channels.",
+          `${tr(locale, { zh: "网关端口", en: "Gateway port" })}: ${DEFAULT_GATEWAY_PORT}`,
+          `${tr(locale, { zh: "网关绑定", en: "Gateway bind" })}: ${tr(locale, { zh: "回环 (127.0.0.1)", en: "Loopback (127.0.0.1)" })}`,
+          `${tr(locale, { zh: "网关鉴权", en: "Gateway auth" })}: ${tr(locale, { zh: "Token（默认）", en: "Token (default)" })}`,
+          `${tr(locale, { zh: "Tailscale 暴露", en: "Tailscale exposure" })}: ${tr(locale, { zh: "关闭", en: "Off" })}`,
+          tr(locale, { zh: "下一步直接进入渠道配置。", en: "Direct to chat channels." }),
         ];
-    await prompter.note(quickstartLines.join("\n"), "QuickStart");
+    await prompter.note(
+      quickstartLines.join("\n"),
+      tr(locale, { zh: "快速开始", en: "QuickStart" }),
+    );
   }
 
   const localPort = resolveGatewayPort(baseConfig);
@@ -290,18 +376,24 @@ export async function runOnboardingWizard(
     (flow === "quickstart"
       ? "local"
       : ((await prompter.select({
-          message: "What do you want to set up?",
+          message: tr(locale, { zh: "你要配置哪种模式？", en: "What do you want to set up?" }),
           options: [
             {
               value: "local",
-              label: "Local gateway (this machine)",
+              label: tr(locale, {
+                zh: "本地网关（本机）",
+                en: "Local gateway (this machine)",
+              }),
               hint: localProbe.ok
                 ? `Gateway reachable (${localUrl})`
                 : `No gateway detected (${localUrl})`,
             },
             {
               value: "remote",
-              label: "Remote gateway (info-only)",
+              label: tr(locale, {
+                zh: "远程网关（仅连接信息）",
+                en: "Remote gateway (info-only)",
+              }),
               hint: !remoteUrl
                 ? "No remote URL configured yet"
                 : remoteProbe?.ok
@@ -318,7 +410,9 @@ export async function runOnboardingWizard(
     nextConfig = onboardHelpers.applyWizardMetadata(nextConfig, { command: "onboard", mode });
     await writeConfigFile(nextConfig);
     logConfigUpdated(runtime);
-    await prompter.outro("Remote gateway configured.");
+    await prompter.outro(
+      tr(locale, { zh: "远程网关配置已完成。", en: "Remote gateway configured." }),
+    );
     return;
   }
 
@@ -327,7 +421,7 @@ export async function runOnboardingWizard(
     (flow === "quickstart"
       ? (baseConfig.agents?.defaults?.workspace ?? onboardHelpers.DEFAULT_WORKSPACE)
       : await prompter.text({
-          message: "Workspace directory",
+          message: tr(locale, { zh: "工作区目录", en: "Workspace directory" }),
           initialValue: baseConfig.agents?.defaults?.workspace ?? onboardHelpers.DEFAULT_WORKSPACE,
         }));
 
@@ -410,7 +504,10 @@ export async function runOnboardingWizard(
   const settings = gateway.settings;
 
   if (opts.skipChannels ?? opts.skipProviders) {
-    await prompter.note("Skipping channel setup.", "Channels");
+    await prompter.note(
+      tr(locale, { zh: "跳过渠道配置。", en: "Skipping channel setup." }),
+      tr(locale, { zh: "渠道", en: "Channels" }),
+    );
   } else {
     const { listChannelPlugins } = await import("../channels/plugins/index.js");
     const { setupChannels } = await import("../commands/onboard-channels.js");
@@ -437,7 +534,10 @@ export async function runOnboardingWizard(
   });
 
   if (opts.skipSkills) {
-    await prompter.note("Skipping skills setup.", "Skills");
+    await prompter.note(
+      tr(locale, { zh: "跳过技能配置。", en: "Skipping skills setup." }),
+      tr(locale, { zh: "技能", en: "Skills" }),
+    );
   } else {
     const { setupSkills } = await import("../commands/onboard-skills.js");
     nextConfig = await setupSkills(nextConfig, workspaceDir, runtime, prompter);

@@ -20,6 +20,28 @@ import type {
 } from "./onboarding.types.js";
 import type { WizardPrompter } from "./prompts.js";
 
+type OnboardingLocale = "zh-CN" | "en-US";
+
+function resolveOnboardingLocale(): OnboardingLocale {
+  const raw = (
+    process.env.OPENCLAW_LOCALE ??
+    process.env.LC_ALL ??
+    process.env.LC_MESSAGES ??
+    process.env.LANG ??
+    ""
+  )
+    .trim()
+    .toLowerCase();
+  if (raw.startsWith("en")) {
+    return "en-US";
+  }
+  return "zh-CN";
+}
+
+function tr(locale: OnboardingLocale, text: { zh: string; en: string }): string {
+  return locale === "zh-CN" ? text.zh : text.en;
+}
+
 // These commands are "high risk" (privacy writes/recording) and should be
 // explicitly armed by the user when they want to use them.
 //
@@ -53,6 +75,7 @@ export async function configureGatewayForOnboarding(
   opts: ConfigureGatewayOptions,
 ): Promise<ConfigureGatewayResult> {
   const { flow, localPort, quickstartGateway, prompter } = opts;
+  const locale = resolveOnboardingLocale();
   let { nextConfig } = opts;
 
   const port =
@@ -61,9 +84,12 @@ export async function configureGatewayForOnboarding(
       : Number.parseInt(
           String(
             await prompter.text({
-              message: "Gateway port",
+              message: tr(locale, { zh: "网关端口", en: "Gateway port" }),
               initialValue: String(localPort),
-              validate: (value) => (Number.isFinite(Number(value)) ? undefined : "Invalid port"),
+              validate: (value) =>
+                Number.isFinite(Number(value))
+                  ? undefined
+                  : tr(locale, { zh: "端口无效", en: "Invalid port" }),
             }),
           ),
           10,
@@ -73,13 +99,22 @@ export async function configureGatewayForOnboarding(
     flow === "quickstart"
       ? quickstartGateway.bind
       : await prompter.select<GatewayWizardSettings["bind"]>({
-          message: "Gateway bind",
+          message: tr(locale, { zh: "网关绑定", en: "Gateway bind" }),
           options: [
-            { value: "loopback", label: "Loopback (127.0.0.1)" },
-            { value: "lan", label: "LAN (0.0.0.0)" },
-            { value: "tailnet", label: "Tailnet (Tailscale IP)" },
-            { value: "auto", label: "Auto (Loopback → LAN)" },
-            { value: "custom", label: "Custom IP" },
+            {
+              value: "loopback",
+              label: tr(locale, { zh: "回环 (127.0.0.1)", en: "Loopback (127.0.0.1)" }),
+            },
+            { value: "lan", label: tr(locale, { zh: "局域网 (0.0.0.0)", en: "LAN (0.0.0.0)" }) },
+            {
+              value: "tailnet",
+              label: tr(locale, { zh: "Tailnet（Tailscale IP）", en: "Tailnet (Tailscale IP)" }),
+            },
+            {
+              value: "auto",
+              label: tr(locale, { zh: "自动 (回环 → LAN)", en: "Auto (Loopback → LAN)" }),
+            },
+            { value: "custom", label: tr(locale, { zh: "自定义 IP", en: "Custom IP" }) },
           ],
         });
 
@@ -88,7 +123,7 @@ export async function configureGatewayForOnboarding(
     const needsPrompt = flow !== "quickstart" || !customBindHost;
     if (needsPrompt) {
       const input = await prompter.text({
-        message: "Custom IP address",
+        message: tr(locale, { zh: "自定义 IP 地址", en: "Custom IP address" }),
         placeholder: "192.168.1.100",
         initialValue: customBindHost ?? "",
         validate: validateIPv4AddressInput,
@@ -101,14 +136,17 @@ export async function configureGatewayForOnboarding(
     flow === "quickstart"
       ? quickstartGateway.authMode
       : ((await prompter.select({
-          message: "Gateway auth",
+          message: tr(locale, { zh: "网关鉴权", en: "Gateway auth" }),
           options: [
             {
               value: "token",
-              label: "Token",
-              hint: "Recommended default (local + remote)",
+              label: tr(locale, { zh: "Token", en: "Token" }),
+              hint: tr(locale, {
+                zh: "推荐默认（本地 + 远程都适用）",
+                en: "Recommended default (local + remote)",
+              }),
             },
-            { value: "password", label: "Password" },
+            { value: "password", label: tr(locale, { zh: "密码", en: "Password" }) },
           ],
           initialValue: "token",
         })) as GatewayAuthChoice);
@@ -117,7 +155,7 @@ export async function configureGatewayForOnboarding(
     flow === "quickstart"
       ? quickstartGateway.tailscaleMode
       : await prompter.select<GatewayWizardSettings["tailscaleMode"]>({
-          message: "Tailscale exposure",
+          message: tr(locale, { zh: "Tailscale 暴露", en: "Tailscale exposure" }),
           options: [...TAILSCALE_EXPOSURE_OPTIONS],
         });
 
@@ -125,16 +163,25 @@ export async function configureGatewayForOnboarding(
   if (tailscaleMode !== "off") {
     const tailscaleBin = await findTailscaleBinary();
     if (!tailscaleBin) {
-      await prompter.note(TAILSCALE_MISSING_BIN_NOTE_LINES.join("\n"), "Tailscale Warning");
+      await prompter.note(
+        TAILSCALE_MISSING_BIN_NOTE_LINES.join("\n"),
+        tr(locale, { zh: "Tailscale 警告", en: "Tailscale Warning" }),
+      );
     }
   }
 
   let tailscaleResetOnExit = flow === "quickstart" ? quickstartGateway.tailscaleResetOnExit : false;
   if (tailscaleMode !== "off" && flow !== "quickstart") {
-    await prompter.note(TAILSCALE_DOCS_LINES.join("\n"), "Tailscale");
+    await prompter.note(
+      TAILSCALE_DOCS_LINES.join("\n"),
+      tr(locale, { zh: "Tailscale", en: "Tailscale" }),
+    );
     tailscaleResetOnExit = Boolean(
       await prompter.confirm({
-        message: "Reset Tailscale serve/funnel on exit?",
+        message: tr(locale, {
+          zh: "退出时是否重置 Tailscale serve/funnel？",
+          en: "Reset Tailscale serve/funnel on exit?",
+        }),
         initialValue: false,
       }),
     );
@@ -144,13 +191,25 @@ export async function configureGatewayForOnboarding(
   // - Tailscale wants bind=loopback so we never expose a non-loopback server + tailscale serve/funnel at once.
   // - Funnel requires password auth.
   if (tailscaleMode !== "off" && bind !== "loopback") {
-    await prompter.note("Tailscale requires bind=loopback. Adjusting bind to loopback.", "Note");
+    await prompter.note(
+      tr(locale, {
+        zh: "Tailscale 要求 bind=loopback，已自动调整为 loopback。",
+        en: "Tailscale requires bind=loopback. Adjusting bind to loopback.",
+      }),
+      tr(locale, { zh: "提示", en: "Note" }),
+    );
     bind = "loopback";
     customBindHost = undefined;
   }
 
   if (tailscaleMode === "funnel" && authMode !== "password") {
-    await prompter.note("Tailscale funnel requires password auth.", "Note");
+    await prompter.note(
+      tr(locale, {
+        zh: "Tailscale funnel 需要密码鉴权，已自动调整为 Password。",
+        en: "Tailscale funnel requires password auth.",
+      }),
+      tr(locale, { zh: "提示", en: "Note" }),
+    );
     authMode = "password";
   }
 
@@ -160,8 +219,14 @@ export async function configureGatewayForOnboarding(
       gatewayToken = quickstartGateway.token ?? randomToken();
     } else {
       const tokenInput = await prompter.text({
-        message: "Gateway token (blank to generate)",
-        placeholder: "Needed for multi-machine or non-loopback access",
+        message: tr(locale, {
+          zh: "网关 Token（留空则自动生成）",
+          en: "Gateway token (blank to generate)",
+        }),
+        placeholder: tr(locale, {
+          zh: "多设备或非 loopback 访问时需要",
+          en: "Needed for multi-machine or non-loopback access",
+        }),
         initialValue: quickstartGateway.token ?? "",
       });
       gatewayToken = normalizeGatewayTokenInput(tokenInput) || randomToken();
@@ -173,7 +238,7 @@ export async function configureGatewayForOnboarding(
       flow === "quickstart" && quickstartGateway.password
         ? quickstartGateway.password
         : await prompter.text({
-            message: "Gateway password",
+            message: tr(locale, { zh: "网关密码", en: "Gateway password" }),
             validate: validateGatewayPasswordInput,
           });
     nextConfig = {

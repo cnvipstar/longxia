@@ -1,0 +1,37 @@
+{
+  "id": "lang-core",
+  "name": "Language Core",
+  "description": "Language policy plugin: default locale, quick switching, and prompt guidance.",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "defaultLocale": {
+        "type": "string"
+      },
+      "currentLocale": {
+        "type": "string"
+      },
+      "allowedLocales": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "uiHints": {
+    "defaultLocale": {
+      "label": "Default locale",
+      "help": "Initial language (default: zh-CN)."
+    },
+    "currentLocale": {
+      "label": "Active locale",
+      "help": "Runtime language override used by /lang."
+    },
+    "allowedLocales": {
+      "label": "Allowed locales",
+      "help": "Optional allowlist for /lang set."
+    }
+  }
+}
