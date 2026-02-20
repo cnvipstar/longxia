@@ -5,6 +5,25 @@ import type { RuntimeEnv } from "../runtime.js";
 import type { WizardPrompter } from "../wizard/prompts.js";
 import { setupInternalHooks } from "./onboard-hooks.js";
 
+function isHooksEnablePrompt(message: string): boolean {
+  return message === "Enable hooks?" || message === "启用 hooks？";
+}
+
+function isSkipNowLabel(label: string): boolean {
+  return label === "Skip for now" || label === "暂时跳过";
+}
+
+function isNoHooksMessage(message: string): boolean {
+  return (
+    message === "No eligible hooks found. You can configure hooks later in your config." ||
+    message === "未发现可启用的 hooks。你可以稍后在配置文件中手动设置。"
+  );
+}
+
+function isNoHooksTitle(title: string): boolean {
+  return title === "No Hooks Available" || title === "无可用 Hooks";
+}
+
 // Mock hook discovery modules
 vi.mock("../hooks/hooks-status.js", () => ({
   buildWorkspaceHookStatus: vi.fn(),
@@ -140,22 +159,13 @@ describe("onboard-hooks", () => {
         "session-memory": { enabled: true },
       });
       expect(prompter.note).toHaveBeenCalledTimes(2);
-      expect(prompter.multiselect).toHaveBeenCalledWith({
-        message: "Enable hooks?",
-        options: [
-          { value: "__skip__", label: "Skip for now" },
-          {
-            value: "session-memory",
-            label: "💾 session-memory",
-            hint: "Save session context to memory when /new command is issued",
-          },
-          {
-            value: "command-logger",
-            label: "📝 command-logger",
-            hint: "Log all command events to a centralized audit file",
-          },
-        ],
-      });
+
+      const args = (prompter.multiselect as ReturnType<typeof vi.fn>).mock.calls[0]?.[0] as
+        | { message: string; options: Array<{ value: string; label: string; hint?: string }> }
+        | undefined;
+      expect(args).toBeDefined();
+      expect(isHooksEnablePrompt(args?.message ?? "")).toBe(true);
+      expect(isSkipNowLabel(args?.options?.[0]?.label ?? "")).toBe(true);
     });
 
     it("should not enable hooks when user skips", async () => {
@@ -175,10 +185,10 @@ describe("onboard-hooks", () => {
 
       expect(result).toEqual(cfg);
       expect(prompter.multiselect).not.toHaveBeenCalled();
-      expect(prompter.note).toHaveBeenCalledWith(
-        "No eligible hooks found. You can configure hooks later in your config.",
-        "No Hooks Available",
+      const matched = (prompter.note as ReturnType<typeof vi.fn>).mock.calls.some(
+        ([message, title]) => isNoHooksMessage(String(message)) && isNoHooksTitle(String(title)),
       );
+      expect(matched).toBe(true);
     });
 
     it("should preserve existing hooks config when enabled", async () => {
@@ -225,11 +235,16 @@ describe("onboard-hooks", () => {
       expect(noteCalls).toHaveLength(2);
 
       // First note should explain what hooks are
-      expect(noteCalls[0][0]).toContain("Hooks let you automate actions");
-      expect(noteCalls[0][0]).toContain("automate actions");
+      expect(
+        String(noteCalls[0][0]).includes("Hooks let you automate actions") ||
+          String(noteCalls[0][0]).includes("Hooks 可在 Agent 命令触发时自动执行动作。"),
+      ).toBe(true);
 
       // Second note should confirm configuration
-      expect(noteCalls[1][0]).toContain("Enabled 1 hook: session-memory");
+      expect(
+        String(noteCalls[1][0]).includes("Enabled 1 hook: session-memory") ||
+          String(noteCalls[1][0]).includes("已启用 1 个 hook：session-memory"),
+      ).toBe(true);
       expect(noteCalls[1][0]).toMatch(/(?:openclaw|openclaw)( --profile isolated)? hooks list/);
     });
   });

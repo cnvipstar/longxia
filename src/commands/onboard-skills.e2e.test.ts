@@ -24,6 +24,18 @@ import { buildWorkspaceSkillStatus } from "../agents/skills-status.js";
 import { detectBinary } from "./onboard-helpers.js";
 import { setupSkills } from "./onboard-skills.js";
 
+function isSkillsStatusTitle(title?: string): boolean {
+  return title === "Skills status" || title === "技能状态";
+}
+
+function hasUnsupportedLine(message: string): boolean {
+  return message.includes("Unsupported on this OS: 1") || message.includes("当前系统不支持: 1");
+}
+
+function isHomebrewRecommendedTitle(title?: string): boolean {
+  return title === "Homebrew recommended" || title === "推荐 Homebrew";
+}
+
 function createBundledSkill(params: {
   name: string;
   description: string;
@@ -110,7 +122,10 @@ function createPrompter(params: {
     ) as unknown as WizardPrompter["multiselect"],
     text: vi.fn(async () => ""),
     confirm: vi.fn(async ({ message }) => {
-      if (message === "Show Homebrew install command?") {
+      if (
+        message === "Show Homebrew install command?" ||
+        message === "显示 Homebrew 安装命令吗？"
+      ) {
         return params.showBrewInstall ?? false;
       }
       return confirmAnswers.shift() ?? false;
@@ -155,10 +170,10 @@ describe("setupSkills", () => {
     await setupSkills({} as OpenClawConfig, "/tmp/ws", runtime, prompter);
 
     // OS-mismatched skill should be counted as unsupported, not installable/missing.
-    const status = notes.find((n) => n.title === "Skills status")?.message ?? "";
-    expect(status).toContain("Unsupported on this OS: 1");
+    const status = notes.find((n) => isSkillsStatusTitle(n.title))?.message ?? "";
+    expect(hasUnsupportedLine(status)).toBe(true);
 
-    const brewNote = notes.find((n) => n.title === "Homebrew recommended");
+    const brewNote = notes.find((n) => isHomebrewRecommendedTitle(n.title));
     expect(brewNote).toBeUndefined();
   });
 
@@ -179,7 +194,7 @@ describe("setupSkills", () => {
     const { prompter, notes } = createPrompter({ multiselect: ["video-frames"] });
     await setupSkills({} as OpenClawConfig, "/tmp/ws", runtime, prompter);
 
-    const brewNote = notes.find((n) => n.title === "Homebrew recommended");
+    const brewNote = notes.find((n) => isHomebrewRecommendedTitle(n.title));
     expect(brewNote).toBeDefined();
   });
 });

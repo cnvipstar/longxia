@@ -5,6 +5,18 @@ import { setDefaultChannelPluginRegistryForTests } from "./channel-test-helpers.
 import { setupChannels } from "./onboard-channels.js";
 import { createExitThrowingRuntime, createWizardPrompter } from "./test-wizard-helpers.js";
 
+function isQuickStartPrompt(message: string): boolean {
+  return message === "Select channel (QuickStart)" || message === "选择渠道（快速开始）";
+}
+
+function isSelectChannelPrompt(message: string): boolean {
+  return message === "Select a channel" || message === "选择一个渠道";
+}
+
+function isConfiguredPrompt(message: string): boolean {
+  return message.includes("already configured") || message.includes("已配置");
+}
+
 function createPrompter(overrides: Partial<WizardPrompter>): WizardPrompter {
   return createWizardPrompter(
     {
@@ -52,10 +64,16 @@ describe("setupChannels", () => {
       throw new Error("unexpected multiselect");
     });
     const text = vi.fn(async ({ message }: { message: string }) => {
-      if (message.includes("Enter Telegram bot token")) {
+      if (
+        message.includes("Enter Telegram bot token") ||
+        message.includes("请输入 Telegram Bot Token")
+      ) {
         throw new Error("unexpected Telegram token prompt");
       }
-      if (message.includes("Your personal WhatsApp number")) {
+      if (
+        message.includes("Your personal WhatsApp number") ||
+        message.includes("你的 WhatsApp 号码")
+      ) {
         return "+15555550123";
       }
       throw new Error(`unexpected text prompt: ${message}`);
@@ -75,9 +93,13 @@ describe("setupChannels", () => {
       forceAllowFromChannels: ["whatsapp"],
     });
 
-    expect(select).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Select channel (QuickStart)" }),
-    );
+    const quickstartCalls = select.mock.calls as unknown as Array<unknown[]>;
+    expect(
+      quickstartCalls.some((call) => {
+        const arg = call[0] as { message?: string } | undefined;
+        return isQuickStartPrompt(String(arg?.message ?? ""));
+      }),
+    ).toBe(true);
     expect(multiselect).not.toHaveBeenCalled();
   });
 
@@ -101,7 +123,7 @@ describe("setupChannels", () => {
 
     const sawPrimer = note.mock.calls.some(
       ([message, title]) =>
-        title === "How channels work" &&
+        (title === "How channels work" || title === "渠道工作方式") &&
         String(message).includes('config set session.dmScope "per-channel-peer"'),
     );
     expect(sawPrimer).toBe(true);
@@ -110,10 +132,10 @@ describe("setupChannels", () => {
 
   it("prompts for configured channel action and skips configuration when told to skip", async () => {
     const select = vi.fn(async ({ message }: { message: string }) => {
-      if (message === "Select channel (QuickStart)") {
+      if (isQuickStartPrompt(message)) {
         return "telegram";
       }
-      if (message.includes("already configured")) {
+      if (isConfiguredPrompt(message)) {
         return "skip";
       }
       throw new Error(`unexpected select prompt: ${message}`);
@@ -144,12 +166,19 @@ describe("setupChannels", () => {
       },
     );
 
-    expect(select).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Select channel (QuickStart)" }),
-    );
-    expect(select).toHaveBeenCalledWith(
-      expect.objectContaining({ message: expect.stringContaining("already configured") }),
-    );
+    const configuredCalls = select.mock.calls as unknown as Array<unknown[]>;
+    expect(
+      configuredCalls.some((call) => {
+        const arg = call[0] as { message?: string } | undefined;
+        return isQuickStartPrompt(String(arg?.message ?? ""));
+      }),
+    ).toBe(true);
+    expect(
+      configuredCalls.some((call) => {
+        const arg = call[0] as { message?: string } | undefined;
+        return isConfiguredPrompt(String(arg?.message ?? ""));
+      }),
+    ).toBe(true);
     expect(multiselect).not.toHaveBeenCalled();
     expect(text).not.toHaveBeenCalled();
   });
@@ -157,14 +186,16 @@ describe("setupChannels", () => {
   it("adds disabled hint to channel selection when a channel is disabled", async () => {
     let selectionCount = 0;
     const select = vi.fn(async ({ message, options }: { message: string; options: unknown[] }) => {
-      if (message === "Select a channel") {
+      if (isSelectChannelPrompt(message)) {
         selectionCount += 1;
         const opts = options as Array<{ value: string; hint?: string }>;
         const telegram = opts.find((opt) => opt.value === "telegram");
-        expect(telegram?.hint).toContain("disabled");
+        expect(telegram?.hint?.includes("disabled") || telegram?.hint?.includes("已禁用")).toBe(
+          true,
+        );
         return selectionCount === 1 ? "telegram" : "__done__";
       }
-      if (message.includes("already configured")) {
+      if (isConfiguredPrompt(message)) {
         return "skip";
       }
       return "__done__";
@@ -196,7 +227,13 @@ describe("setupChannels", () => {
       },
     );
 
-    expect(select).toHaveBeenCalledWith(expect.objectContaining({ message: "Select a channel" }));
+    const selectCalls = select.mock.calls as unknown as Array<unknown[]>;
+    expect(
+      selectCalls.some((call) => {
+        const arg = call[0] as { message?: string } | undefined;
+        return isSelectChannelPrompt(String(arg?.message ?? ""));
+      }),
+    ).toBe(true);
     expect(multiselect).not.toHaveBeenCalled();
   });
 });
