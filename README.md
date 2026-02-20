@@ -55,6 +55,49 @@ openclaw onboard --install-daemon
 
 The wizard installs the Gateway daemon (launchd/systemd user service) so it stays running.
 
+## Fork quick start (zh-CN default)
+
+This fork keeps upstream behavior, and adds:
+
+- Chinese-first onboarding prompts (switches to English when locale starts with `en`).
+- Plugin-style language stack (`lang-core` + language packs).
+- One-click install scripts for macOS/Linux and Windows.
+- Windows native health-check and auto-fix helper.
+
+### One-click install
+
+macOS/Linux:
+
+```bash
+./install-cn.sh
+```
+
+Windows PowerShell:
+
+```powershell
+./install-cn.ps1 -Mode Auto
+```
+
+Windows mode options:
+
+- `-Mode Auto`: prefer WSL if available, otherwise native.
+- `-Mode WSL`: force WSL path.
+- `-Mode Native`: force native Windows path.
+
+### Language plugin docs
+
+- [`LANGUAGE_PLUGINS.md`](LANGUAGE_PLUGINS.md)
+
+### Windows native docs
+
+- [`WINDOWS_NATIVE.md`](WINDOWS_NATIVE.md)
+
+### Keep fork synced with upstream
+
+```bash
+./sync-upstream.sh
+```
+
 ## Quick start (TL;DR)
 
 Runtime: **Node ≥22**.
